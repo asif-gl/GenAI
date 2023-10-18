@@ -48,12 +48,3 @@ def final_result(request):
         response = qa_result({'query': query})
         return Response(response['result'])
     
-
-@api_view(['POST'])
-def pdf_loader(request):
-    if request.method == 'POST':
-        data = request.data
-        query = data.get('query', None)
-        qa_result = qa_bot()
-        response = qa_result({'query': query})
-        return Response(response)
