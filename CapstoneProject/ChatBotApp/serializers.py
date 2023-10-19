@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, UserProfile
 
 class UserSerializers(serializers.ModelSerializer):
 
@@ -15,3 +15,8 @@ class UserSerializers(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+class UserProfileSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('technologies', 'goals')

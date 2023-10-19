@@ -6,3 +6,9 @@ from django.db import models
 
 class User(AbstractUser):
     pass
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    technologies = models.CharField(max_length=512, blank=True)
+    goals = models.CharField(max_length=512, blank=True)
