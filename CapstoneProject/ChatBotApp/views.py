@@ -10,7 +10,6 @@ from langchain import PromptTemplate
 # Create your views here.
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
 def user_login(request):
     if request.method == 'POST':
         data = request.data
@@ -32,7 +31,6 @@ def user_login(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
 def register_user(request):
     if request.method == 'POST':
         serializer = UserSerializers(data=request.data)
@@ -43,7 +41,6 @@ def register_user(request):
     
 
 @api_view(['GET', 'PUT'])
-@permission_classes([IsAuthenticated])
 def user_profile(request):    
     user = request.user
 
@@ -60,7 +57,6 @@ def user_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def user_logout(request):
     # Perform any additional logout logic if needed
     logout(request)  # Remove the authentication token
@@ -69,7 +65,6 @@ def user_logout(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def my_bot(request):
     if request.method == 'POST':
         data = request.data
@@ -81,7 +76,6 @@ def my_bot(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def generate_learning_path(request):
     if request.method == 'POST':
         data = request.data
