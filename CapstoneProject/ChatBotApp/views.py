@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
 from .serializers import UserSerializers, UserProfileSerializers
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .rag import qa_bot, set_custom_prompt
 from langchain import PromptTemplate
@@ -10,6 +11,7 @@ from langchain import PromptTemplate
 # Create your views here.
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def user_login(request):
     if request.method == 'POST':
         data = request.data
@@ -19,11 +21,15 @@ def user_login(request):
 
         user = authenticate(username=username, password=password)
 
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
         if user is not None:
             if user.is_active:
                 login(request, user)
 
-                return Response(status=status.HTTP_200_OK)
+                return Response({'access_token': access_token}, status=status.HTTP_200_OK)
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
@@ -31,6 +37,7 @@ def user_login(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def register_user(request):
     if request.method == 'POST':
         serializer = UserSerializers(data=request.data)
@@ -41,6 +48,7 @@ def register_user(request):
     
 
 @api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
 def user_profile(request):    
     user = request.user
 
@@ -49,7 +57,6 @@ def user_profile(request):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        import pdb; pdb.set_trace()
         serializer = UserProfileSerializers(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -57,6 +64,7 @@ def user_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def user_logout(request):
     # Perform any additional logout logic if needed
     logout(request)  # Remove the authentication token
@@ -65,6 +73,7 @@ def user_logout(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def my_bot(request):
     if request.method == 'POST':
         data = request.data
@@ -76,6 +85,7 @@ def my_bot(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def generate_learning_path(request):
     if request.method == 'POST':
         data = request.data
