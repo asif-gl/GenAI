@@ -1,12 +1,13 @@
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
-from .serializers import UserSerializers, UserProfileSerializers
+from .serializers import UserSerializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .rag import qa_bot, set_custom_prompt
 from langchain import PromptTemplate
+from .models import User
 
 # Create your views here.
 
@@ -37,33 +38,36 @@ def user_login(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def register_user(request):
     if request.method == 'POST':
         serializer = UserSerializers(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({'detail': 'Successfully SignUp.'}, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+            # Create a token for the user
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            return Response({'detail': 'Successfully SignUp.', 'access_token': access_token}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
-def user_profile(request):    
-    user = request.user
-
-    if request.method == 'GET':
+def user_profile(request):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)    
+    if request.method == 'GET':       
         serializer = UserSerializers(user)
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = UserProfileSerializers(user, data=request.data)
+        serializer = UserSerializers(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def user_logout(request):
     # Perform any additional logout logic if needed
